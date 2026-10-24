@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ফাইন্যান্স ডেস্ক - আয়, ব্যয় ও একাউন্ট ম্যানেজার</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Hind Siliguri Bangla Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Hind Siliguri', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-16">
+
+  <!-- Top Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 text-white p-2 rounded-xl">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 leading-tight">ফাইন্যান্স ডেস্ক</h1>
+          <p class="text-xs text-slate-500">হিসাব, ঋণ ও আয়-ব্যয় ট্র্যাকার</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openModal('addAccountModal')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl transition">
+          + নতুন একাউন্ট
+        </button>
+        <button onclick="openTransactionModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl transition shadow-sm">
+          + লেনদেন যোগ করুন
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- KPI Master Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
+        <p class="text-xs font-semibold uppercase text-slate-400">নিট সম্পদ (ব্যালেন্স)</p>
+        <p id="kpiNetWorth" class="text-2xl font-extrabold text-slate-900 mt-1">০ ৳</p>
+        <p class="text-[11px] text-slate-400 mt-1">মোট সম্পদ থেকে ঋণ বাদ</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold uppercase text-emerald-600">মোট তরল সম্পদ</p>
+        <p id="kpiTotalAssets" class="text-2xl font-extrabold text-emerald-600 mt-1">০ ৳</p>
+        <p class="text-[11px] text-slate-400 mt-1">ক্যাশ, ব্যাংক ও বিকাশ/নগদ</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold uppercase text-rose-600">মোট ঋণ / বকেয়া</p>
+        <p id="kpiTotalDebt" class="text-2xl font-extrabold text-rose-600 mt-1">০ ৳</p>
+        <p class="text-[11px] text-slate-400 mt-1">ক্রেডিট কার্ড ও নেওয়া ধার</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold uppercase text-indigo-600">মোট আয়</p>
+        <p id="kpiTotalIncome" class="text-2xl font-extrabold text-indigo-600 mt-1">০ ৳</p>
+        <p class="text-[11px] text-slate-400 mt-1">বেতন ও অন্যান্য উপার্জন</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold uppercase text-amber-600">মোট ব্যয়</p>
+        <p id="kpiTotalExpense" class="text-2xl font-extrabold text-amber-600 mt-1">০ ৳</p>
+        <p class="text-[11px] text-slate-400 mt-1">সকল মাধ্যমের খরচ</p>
+      </div>
+    </div>
+
+    <!-- SECTION 1: Accounts Hub -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">আপনার একাউন্টসমূহ</h2>
+          <p class="text-xs text-slate-500">লেনদেনের সাথে স্বয়ংক্রিয়ভাবে ব্যালেন্স আপডেট হবে</p>
+        </div>
+        <button onclick="openModal('addAccountModal')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+          + আরেকটি একাউন্ট যোগ করুন
+        </button>
+      </div>
+      <div id="accountsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Dynamic Account Cards -->
+      </div>
+    </div>
+
+    <!-- SECTION 2: Analytics Hub -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">আয়-ব্যয় বিশ্লেষণ ও রিপোর্ট</h2>
+          <p class="text-xs text-slate-500" id="analysisSubtitle">সময় অনুযায়ী আয় ও খরচের তুলনা</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Timeframe Selector -->
+          <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+            <button onclick="setAnalysisView('weekly')" id="tab-weekly" class="view-tab px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">সাপ্তাহিক</button>
+            <button onclick="setAnalysisView('monthly')" id="tab-monthly" class="view-tab px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-indigo-600">মাসিক</button>
+            <button onclick="setAnalysisView('yearly')" id="tab-yearly" class="view-tab px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">বাৎসরিক</button>
+          </div>
+
+          <!-- Download Analysis Report Button -->
+          <button onclick="downloadAnalysisCSV()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span id="downloadBtnText">📥 মাসিক রিপোর্ট ডাউনলোড (CSV)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 relative h-64 flex items-center justify-center">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <div class="relative h-64 flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Breakdown Table -->
+      <div class="overflow-x-auto pt-2">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 text-xs font-semibold uppercase text-slate-400">
+              <th class="pb-3">সময়কাল</th>
+              <th class="pb-3 text-right">আয়</th>
+              <th class="pb-3 text-right">ব্যয়</th>
+              <th class="pb-3 text-right">নিট সঞ্চয়</th>
+              <th class="pb-3 text-right">সঞ্চয়ের হার</th>
+            </tr>
+          </thead>
+          <tbody id="periodTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Transaction History -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900">লেনদেনের ইতিহাস</h2>
+        <div class="flex items-center gap-3">
+          <button onclick="downloadTransactionsCSV()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            সব লেনদেন ডাউনলোড
+          </button>
+          <button onclick="clearAllData()" id="clearAllBtn" class="text-xs text-rose-600 hover:underline hidden">সব মুছুন</button>
+        </div>
+      </div>
+      <div class="overflow-y-auto max-h-80">
+        <div id="transactionsList" class="space-y-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD ACCOUNT -->
+  <div id="addAccountModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900">নতুন একাউন্ট যোগ করুন</h3>
+        <button onclick="closeModal('addAccountModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleAddAccount(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">একাউন্টের ধরন</label>
+          <select id="newAccType" required onchange="handleAccountTypeChange()" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="cash">💵 হাতে নগদ (Cash)</option>
+            <option value="bank">🏦 ব্যাংক হিসাব (Bank)</option>
+            <option value="mfs">📱 এমএফএস (বিকাশ / নগদ / রকেট)</option>
+            <option value="card">💳 ক্রেডিট কার্ড (ঋণ/বকেয়া)</option>
+            <option value="loan">🤝 ব্যক্তিগত ঋণ / ধার (দেনা)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">একাউন্টের নাম</label>
+          <input type="text" id="newAccName" required placeholder="যেমন: মানিব্যাগ, ব্র্যাক ব্যাংক, পার্সোনাল বিকাশ" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div>
+          <label id="accBalanceLabel" class="block text-xs font-medium text-slate-600 mb-1">প্রারম্ভিক ব্যালেন্স (৳)</label>
+          <input type="number" step="0.01" min="0" id="newAccBalance" required placeholder="0.00" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p id="accBalanceHelp" class="text-[11px] text-slate-400 mt-1">একাউন্টে বর্তমানে থাকা টাকার পরিমাণ।</p>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('addAccountModal')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">বাতিল</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RECORD TRANSACTION -->
+  <div id="txModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900">লেনদেন রেকর্ড করুন</h3>
+        <button onclick="closeModal('txModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleRecordTransaction(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">লেনদেনের প্রকৃতি</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center justify-center p-2 rounded-lg border border-slate-200 cursor-pointer has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500 has-[:checked]:text-emerald-700 transition">
+              <input type="radio" name="txType" value="income" class="hidden" checked onchange="updateTxFormOptions()">
+              <span class="text-xs font-bold">+ আয় (Income)</span>
+            </label>
+            <label class="flex items-center justify-center p-2 rounded-lg border border-slate-200 cursor-pointer has-[:checked]:bg-rose-50 has-[:checked]:border-rose-500 has-[:checked]:text-rose-700 transition">
+              <input type="radio" name="txType" value="expense" class="hidden" onchange="updateTxFormOptions()">
+              <span class="text-xs font-bold">- ব্যয় (Expense)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label id="txAccountLabel" class="block text-xs font-medium text-slate-600 mb-1">একাউন্ট নির্বাচন করুন</label>
+          <select id="txAccountId" required class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">ক্যাটাগরি</label>
+          <select id="txCategory" required class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">টাকার পরিমাণ (৳)</label>
+            <input type="number" step="0.01" min="0.01" id="txAmount" required placeholder="0.00" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">তারিখ</label>
+            <input type="date" id="txDate" required class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">বিবরণ</label>
+          <input type="text" id="txDesc" required placeholder="যেমন: মাসের বেতন, ডাইনিং খরচ, কারেন্ট বিল" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('txModal')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100">বাতিল</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">এন্ট্রি করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Bangla Metadata Configuration
+    const accountMeta = {
+      cash: { label: 'হাতে নগদ', isDebt: false, badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: '💵' },
+      bank: { label: 'ব্যাংক হিসাব', isDebt: false, badge: 'bg-blue-50 text-blue-700 border-blue-200', icon: '🏦' },
+      mfs:  { label: 'বিকাশ/নগদ', isDebt: false, badge: 'bg-purple-50 text-purple-700 border-purple-200', icon: '📱' },
+      card: { label: 'ক্রেডিট কার্ড (বকেয়া)', isDebt: true,  badge: 'bg-rose-50 text-rose-700 border-rose-200', icon: '💳' },
+      loan: { label: 'ব্যক্তিগত ঋণ', isDebt: true,  badge: 'bg-amber-50 text-amber-800 border-amber-200', icon: '🤝' }
+    };
+
+    const categories = {
+      income: ['বেতন (Salary)', 'ফ্রিল্যান্সিং ও প্রোজেক্ট', 'ব্যবসা ও বিনিয়োগ', 'উপহার / বোনাস', 'অন্যান্য আয়'],
+      expense: ['বাজার ও খাবার', 'বাসা ভাড়া', 'বিদ্যুৎ ও ইন্টারনেট বিল', 'যাতায়াত ও জ্বালানি', 'কেনাকাটা (Shopping)', 'চিকিৎসা ও ওষুধ', 'বিনোদন', 'ঋণ/কার্ড বিল পরিশোধ', 'অন্যান্য ব্যয়']
+    };
+
+    // State
+    let accounts = JSON.parse(localStorage.getItem('fd_bn_accounts')) || [];
+    let transactions = JSON.parse(localStorage.getItem('fd_bn_transactions')) || [];
+    let currentAnalysisView = 'monthly';
+    let currentPeriodData = []; // Cached for CSV export
+
+    let trendChartInstance = null;
+    let categoryChartInstance = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      renderAll();
+    });
+
+    function saveState() {
+      localStorage.setItem('fd_bn_accounts', JSON.stringify(accounts));
+      localStorage.setItem('fd_bn_transactions', JSON.stringify(transactions));
+      renderAll();
+    }
+
+    function calculateAccountBalances() {
+      return accounts.map(acc => {
+        const isDebt = accountMeta[acc.type].isDebt;
+        let currentBalance = acc.initialBalance;
+
+        transactions.forEach(tx => {
+          if (tx.accountId === acc.id) {
+            if (!isDebt) {
+              if (tx.type === 'income') currentBalance += tx.amount;
+              if (tx.type === 'expense') currentBalance -= tx.amount;
+            } else {
+              if (tx.type === 'expense') currentBalance += tx.amount;
+              if (tx.type === 'income') currentBalance -= tx.amount;
+            }
+          }
+        });
+
+        return { ...acc, currentBalance };
+      });
+    }
+
+    function renderAll() {
+      const liveAccounts = calculateAccountBalances();
+      renderMasterKPIs(liveAccounts);
+      renderAccountsGrid(liveAccounts);
+      renderAnalytics();
+      renderTransactionHistory();
+    }
+
+    function renderMasterKPIs(liveAccounts) {
+      let totalAssets = 0;
+      let totalDebt = 0;
+
+      liveAccounts.forEach(acc => {
+        if (accountMeta[acc.type].isDebt) {
+          totalDebt += acc.currentBalance;
+        } else {
+          totalAssets += acc.currentBalance;
+        }
+      });
+
+      const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const netWorth = totalAssets - totalDebt;
+
+      document.getElementById('kpiTotalAssets').textContent = formatCurrency(totalAssets);
+      document.getElementById('kpiTotalDebt').textContent = formatCurrency(totalDebt);
+      document.getElementById('kpiTotalIncome').textContent = formatCurrency(totalIncome);
+      document.getElementById('kpiTotalExpense').textContent = formatCurrency(totalExpense);
+
+      const netElem = document.getElementById('kpiNetWorth');
+      netElem.textContent = formatCurrency(netWorth);
+      netElem.className = `text-2xl font-extrabold ${netWorth < 0 ? 'text-rose-600' : 'text-slate-900'} mt-1`;
+
+      document.getElementById('clearAllBtn').classList.toggle('hidden', accounts.length === 0 && transactions.length === 0);
+    }
+
+    function renderAccountsGrid(liveAccounts) {
+      const grid = document.getElementById('accountsGrid');
+
+      if (liveAccounts.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-10 bg-white border border-dashed border-slate-300 rounded-2xl text-center space-y-2">
+            <p class="text-sm font-semibold text-slate-700">কোনো একাউন্ট যোগ করা হয়নি</p>
+            <p class="text-xs text-slate-400">হাতে নগদ, ব্যাংক, বিকাশ বা ক্রেডিট কার্ড একাউন্ট যোগ করে শুরু করুন।</p>
+            <button onclick="openModal('addAccountModal')" class="text-xs bg-slate-900 text-white font-semibold px-4 py-2 rounded-lg mt-1">
+              + প্রথম একাউন্ট যোগ করুন
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = liveAccounts.map(acc => {
+        const meta = accountMeta[acc.type];
+        const isDebt = meta.isDebt;
+
+        return `
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition group">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${meta.badge}">
+                  <span>${meta.icon}</span> ${meta.label}
+                </span>
+                <button onclick="deleteAccount('${acc.id}')" title="একাউন্ট মুছুন" class="text-slate-300 hover:text-rose-600 transition text-xs font-bold">✕</button>
+              </div>
+              <div>
+                <h4 class="text-base font-bold text-slate-800">${escapeHtml(acc.name)}</h4>
+                <p class="text-[11px] text-slate-400">শুরুর পরিমাণ: ${formatCurrency(acc.initialBalance)}</p>
+              </div>
+            </div>
+            <div class="pt-4 mt-3 border-t border-slate-100">
+              <p class="text-[11px] font-semibold uppercase tracking-wider ${isDebt ? 'text-rose-500' : 'text-slate-400'}">
+                ${isDebt ? 'মোট বকেয়া / ঋণ' : 'বর্তমান ব্যালেন্স'}
+              </p>
+              <p class="text-xl font-bold ${isDebt ? 'text-rose-600' : 'text-slate-900'} mt-0.5">
+                ${formatCurrency(acc.currentBalance)}
+              </p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setAnalysisView(view) {
+      currentAnalysisView = view;
+      ['weekly', 'monthly', 'yearly'].forEach(v => {
+        const btn = document.getElementById(`tab-${v}`);
+        btn.className = (v === view)
+          ? "view-tab px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white shadow-sm text-indigo-600"
+          : "view-tab px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900";
+      });
+
+      const labelMap = {
+        weekly: "সাপ্তাহিক ভিত্তিতে সংকলিত",
+        monthly: "মাসিক ভিত্তিতে সংকলিত",
+        yearly: "বাৎসরিক ভিত্তিতে সংকলিত"
+      };
+
+      const btnTextMap = {
+        weekly: "📥 সাপ্তাহিক রিপোর্ট ডাউনলোড (CSV)",
+        monthly: "📥 মাসিক রিপোর্ট ডাউনলোড (CSV)",
+        yearly: "📥 বাৎসরিক রিপোর্ট ডাউনলোড (CSV)"
+      };
+
+      document.getElementById('analysisSubtitle').textContent = labelMap[view];
+      document.getElementById('downloadBtnText').textContent = btnTextMap[view];
+      renderAnalytics();
+    }
+
+    function renderAnalytics() {
+      const groups = {};
+
+      transactions.forEach(t => {
+        const d = new Date(t.date);
+        let key = '';
+
+        if (currentAnalysisView === 'weekly') {
+          const year = d.getFullYear();
+          const oneJan = new Date(year, 0, 1);
+          const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000));
+          const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
+          key = `সপ্তাহ ${toBanglaNumber(weekNumber)}, ${toBanglaNumber(year)}`;
+        } else if (currentAnalysisView === 'monthly') {
+          key = d.toLocaleString('bn-BD', { month: 'long', year: 'numeric' });
+        } else if (currentAnalysisView === 'yearly') {
+          key = toBanglaNumber(d.getFullYear()) + ' সাল';
+        }
+
+        if (!groups[key]) {
+          groups[key] = { key, income: 0, expense: 0, rawDate: d };
+        }
+
+        if (t.type === 'income') groups[key].income += t.amount;
+        if (t.type === 'expense') groups[key].expense += t.amount;
+      });
+
+      const sortedPeriods = Object.values(groups).sort((a, b) => a.rawDate - b.rawDate);
+      currentPeriodData = sortedPeriods;
+
+      renderTrendChart(sortedPeriods);
+      renderCategoryChart();
+      renderBreakdownTable(sortedPeriods);
+    }
+
+    function renderTrendChart(periods) {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      if (trendChartInstance) trendChartInstance.destroy();
+
+      if (periods.length === 0) {
+        trendChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: { labels: ['তথ্য নেই'], datasets: [{ label: 'আয়', data: [0] }, { label: 'ব্যয়', data: [0] }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { display: false } } }
+        });
+        return;
+      }
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: periods.map(p => p.key),
+          datasets: [
+            { label: 'মোট আয়', data: periods.map(p => p.income), backgroundColor: 'rgba(16, 185, 129, 0.85)', borderRadius: 6 },
+            { label: 'মোট ব্যয়', data: periods.map(p => p.expense), backgroundColor: 'rgba(244, 63, 94, 0.85)', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { family: 'Hind Siliguri', size: 12 } } } },
+          scales: { x: { grid: { display: false } }, y: { grid: { color: '#f1f5f9' }, ticks: { callback: v => formatCurrency(v) } } }
+        }
+      });
+    }
+
+    function renderCategoryChart() {
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartInstance) categoryChartInstance.destroy();
+
+      const expenseMap = {};
+      transactions.filter(t => t.type === 'expense').forEach(t => {
+        expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount;
+      });
+
+      const labels = Object.keys(expenseMap);
+      const data = Object.values(expenseMap);
+
+      if (labels.length === 0) {
+        categoryChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels: ['ব্যয় রেকর্ড নেই'], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'] }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Hind Siliguri', size: 11 } } } } }
+        });
+        return;
+      }
+
+      categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899', '#64748b'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { family: 'Hind Siliguri', size: 11 } } } }
+        }
+      });
+    }
+
+    function renderBreakdownTable(periods) {
+      const tbody = document.getElementById('periodTableBody');
+      if (periods.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">কোনো তথ্য পাওয়া যায়নি। লেনদেন এন্ট্রি করুন।</td></tr>`;
+        return;
+      }
+
+      const display = [...periods].reverse();
+      tbody.innerHTML = display.map(p => {
+        const net = p.income - p.expense;
+        const rate = p.income > 0 ? Math.round((net / p.income) * 100) : 0;
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 font-semibold text-slate-800">${p.key}</td>
+            <td class="py-3 text-right text-emerald-600 font-medium">${formatCurrency(p.income)}</td>
+            <td class="py-3 text-right text-rose-600 font-medium">${formatCurrency(p.expense)}</td>
+            <td class="py-3 text-right font-bold ${net >= 0 ? 'text-slate-800' : 'text-rose-600'}">${formatCurrency(net)}</td>
+            <td class="py-3 text-right text-slate-600">${toBanglaNumber(rate)}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTransactionHistory() {
+      const container = document.getElementById('transactionsList');
+      if (transactions.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">এখনো কোনো লেনদেন রেকর্ড করা হয়নি।</p>`;
+        return;
+      }
+
+      const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      container.innerHTML = sorted.map(t => {
+        const isIncome = t.type === 'income';
+        const account = accounts.find(a => a.id === t.accountId);
+        const accName = account ? account.name : 'মুছে ফেলা একাউন্ট';
+
+        return `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/60 transition group">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                ${isIncome ? '↓' : '↑'}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-800">${escapeHtml(t.desc)}</p>
+                <p class="text-xs text-slate-400">
+                  ${t.date} • <span class="font-medium text-slate-600">${escapeHtml(accName)}</span> • <span class="text-slate-500">${t.category}</span>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="text-sm font-bold ${isIncome ? 'text-emerald-600' : 'text-slate-800'}">
+                ${isIncome ? '+' : '-'}${formatCurrency(t.amount)}
+              </span>
+              <button onclick="deleteTransaction('${t.id}')" title="মুছুন" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition text-xs font-semibold px-1">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 📥 CSV EXPORT ENGINE (With UTF-8 BOM)
+    // ==========================================
+
+    // 1. Download Current Analysis View (Weekly, Monthly or Yearly)
+    function downloadAnalysisCSV() {
+      if (currentPeriodData.length === 0) {
+        alert("ডাউনলোড করার মতো কোনো রিপোর্ট ডাটা নেই!");
+        return;
+      }
+
+      const viewTitleMap = {
+        weekly: "সাপ্তাহিক_আয়_ব্যয়_রিপোর্ট",
+        monthly: "মাসিক_আয়_ব্যয়_রিপোর্ট",
+        yearly: "বাৎসরিক_আয়_ব্যয়_রিপোর্ট"
+      };
+
+      const headers = ["সময়কাল", "মোট আয় (টাকা)", "মোট ব্যয় (টাকা)", "নিট সঞ্চয় (টাকা)", "সঞ্চয়ের হার (%)"];
+      
+      const rows = currentPeriodData.map(p => {
+        const net = p.income - p.expense;
+        const rate = p.income > 0 ? Math.round((net / p.income) * 100) : 0;
+        return [
+          `"${p.key}"`,
+          p.income.toFixed(2),
+          p.expense.toFixed(2),
+          net.toFixed(2),
+          `${rate}%`
+        ];
+      });
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      triggerDownload(csvContent, `${viewTitleMap[currentAnalysisView]}.csv`);
+    }
+
+    // 2. Download Itemized Transactions History
+    function downloadTransactionsCSV() {
+      if (transactions.length === 0) {
+        alert("ডাউনলোড করার মতো কোনো লেনদেন নেই!");
+        return;
+      }
+
+      const headers = ["তারিখ", "বিবরণ", "একাউন্ট", "ক্যাটাগরি", "লেনদেনের ধরন", "পরিমাণ (টাকা)"];
+
+      const rows = transactions.map(t => {
+        const account = accounts.find(a => a.id === t.accountId);
+        const accName = account ? account.name : 'মুছে ফেলা একাউন্ট';
+        const typeLabel = t.type === 'income' ? 'আয় (+)' : 'ব্যয় (-)';
+
+        return [
+          `"${t.date}"`,
+          `"${t.desc.replace(/"/g, '""')}"`,
+          `"${accName.replace(/"/g, '""')}"`,
+          `"${t.category}"`,
+          `"${typeLabel}"`,
+          t.amount.toFixed(2)
+        ];
+      });
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      triggerDownload(csvContent, `সকল_লেনদেনের_হিস্ট্রি.csv`);
+    }
+
+    // Helper: Triggers CSV file download with UTF-8 BOM so Excel opens Bangla properly
+    function triggerDownload(content, filename) {
+      const bom = "\uFEFF"; // UTF-8 Byte Order Mark for Excel Bangla compatibility
+      const blob = new Blob([bom + content], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // Form Handlers
+    function handleAccountTypeChange() {
+      const type = document.getElementById('newAccType').value;
+      const isDebt = accountMeta[type].isDebt;
+      document.getElementById('accBalanceLabel').textContent = isDebt ? "বর্তমান বকেয়া / ঋণের পরিমাণ (৳)" : "প্রারম্ভিক ব্যালেন্স (৳)";
+      document.getElementById('accBalanceHelp').textContent = isDebt ? "কার্ডে থাকা বকেয়া বা কারো কাছ থেকে নেওয়া দেনা।" : "একাউন্টে থাকা নগদ বা জমানো টাকা।";
+    }
+
+    function handleAddAccount(e) {
+      e.preventDefault();
+      const type = document.getElementById('newAccType').value;
+      const name = document.getElementById('newAccName').value.trim();
+      const initialBalance = parseFloat(document.getElementById('newAccBalance').value);
+
+      if (!name || isNaN(initialBalance)) return;
+
+      accounts.push({ id: Date.now().toString(), type, name, initialBalance });
+      saveState();
+
+      e.target.reset();
+      handleAccountTypeChange();
+      closeModal('addAccountModal');
+    }
+
+    function deleteAccount(id) {
+      const acc = accounts.find(a => a.id === id);
+      if (!acc) return;
+      if (confirm(`আপনি কি "${acc.name}" মুছে ফেলতে চান?`)) {
+        accounts = accounts.filter(a => a.id !== id);
+        saveState();
+      }
+    }
+
+    function openTransactionModal() {
+      if (accounts.length === 0) {
+        alert("লেনদেন করার আগে অন্তত একটি একাউন্ট (ক্যাশ, ব্যাংক, বিকাশ ইত্যাদি) যোগ করুন!");
+        openModal('addAccountModal');
+        return;
+      }
+      updateTxFormOptions();
+      openModal('txModal');
+    }
+
+    function updateTxFormOptions() {
+      const type = document.querySelector('input[name="txType"]:checked').value;
+      const catSelect = document.getElementById('txCategory');
+      catSelect.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+
+      const accSelect = document.getElementById('txAccountId');
+      accSelect.innerHTML = accounts.map(a => {
+        const meta = accountMeta[a.type];
+        return `<option value="${a.id}">${meta.icon} ${escapeHtml(a.name)} (${meta.label})</option>`;
+      }).join('');
+
+      document.getElementById('txAccountLabel').textContent = (type === 'income')
+        ? "জমা হওয়ার একাউন্ট (ব্যাংক, বিকাশ, ক্যাশ)"
+        : "খরচের মাধ্যম (ক্যাশ, বিকাশ, কার্ড বা ব্যাংক)";
+    }
+
+    function handleRecordTransaction(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="txType"]:checked').value;
+      const accountId = document.getElementById('txAccountId').value;
+      const category = document.getElementById('txCategory').value;
+      const amount = parseFloat(document.getElementById('txAmount').value);
+      const date = document.getElementById('txDate').value;
+      const desc = document.getElementById('txDesc').value.trim();
+
+      if (!accountId || !desc || isNaN(amount) || !date) return;
+
+      transactions.push({ id: Date.now().toString(), type, accountId, category, amount, date, desc });
+      saveState();
+
+      document.getElementById('txDesc').value = '';
+      document.getElementById('txAmount').value = '';
+      closeModal('txModal');
+    }
+
+    function deleteTransaction(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveState();
+    }
+
+    function clearAllData() {
+      if (confirm("আপনি কি সব একাউন্ট ও লেনদেন মুছে সম্পূর্ণ খালি (০) করতে চান?")) {
+        accounts = [];
+        transactions = [];
+        saveState();
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function toBanglaNumber(n) {
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return n.toString().replace(/\d/g, d => bnDigits[d]);
+    }
+
+    function formatCurrency(num) {
+      const formatted = num.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return formatted + ' ৳';
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
